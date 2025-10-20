@@ -1,0 +1,3 @@
+time,X-axis_position_MCS,Spindle_angular_velocity,Door_open,Program_path,Program_line_number
+2025-10-10T10:00:00Z,12.5,1500,TRUE,/prog/main.nc,42
+2025-10-10T10:00:01Z,12.7,1550,FALSE,/prog/main.nc,43

@@ -1,0 +1,27 @@
+# === Источник данных CSV ===
+sim:
+  # Имя CSV-файла в ресурсах (src/main/resources)
+  csvName: data.csv
+
+  # Поведение при достижении конца файла: начать сначала (true) или вернуть null (false)
+  loopAtEof: true
+
+  # === Настройки маппинга столбцов CSV → MTConnect ===
+  mapping:
+    # Режим работы реестра маппинга:
+    # - EXPLICIT_ONLY   — использовать ТОЛЬКО правила из файла rulesFile
+    # - HEURISTIC_ONLY  — игнорировать файл и использовать авто-эвристику
+    mode: HEURISTIC_ONLY
+
+    # Внешний YAML с правилами (мы подготовили mapping-rules.yaml)
+    # Можно: classpath:..., file:/abs/path/..., или просто /abs/path/...
+    rulesFile: classpath:mapping-rules.yaml
+
+# === Опционально: порт приложения ===
+server:
+  port: 8080
+
+# === Опционально: поведение Spring Boot ===
+spring:
+  main:
+    banner-mode: "off"
