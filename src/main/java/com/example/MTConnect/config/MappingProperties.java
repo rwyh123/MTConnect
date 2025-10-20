@@ -11,6 +11,21 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ Это конфигурационный бин Spring Boot, чьи поля автоматически заполняются из настроек с префиксом sim.mapping (@ConfigurationProperties(prefix = "sim.mapping")).
+ Хранит:
+ rules : List<MapRule> — список правил сопоставления (по умолчанию пустой).
+ mode : MappingMode — режим работы маппинга (значение по умолчанию EXPLICIT_ONLY).
+ rulesFile : String — путь к внешнему YAML-файлу с правилами (classpath:... или файловый путь).
+
+ Метод loadFromRulesFileIfPresent(ResourceLoader loader):
+ Если указан rulesFile, загружает YAML через ObjectMapper(new YAMLFactory()).
+ Поддерживает локации classpath: и file: (для обычного пути добавляется префикс file:).
+ Читает структуру вида rules: [...] в вспомогательную обёртку RulesWrapper и, если правила найдены, заменяет текущий rules.
+ Бросает понятные исключения, если файл не найден или парсинг не удался.
+ Внутренний класс RulesWrapper — простая модель для корневого узла YAML (rules).
+ */
+
 @ConfigurationProperties(prefix = "sim.mapping")
 public class MappingProperties {
     // fields...
