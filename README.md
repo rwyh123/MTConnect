@@ -1,209 +1,139 @@
-MTConnect Streams Simulator (Spring Boot)
+# MTConnect Streams Simulator
 
-Небольшой сервис, который эмулирует поток данных MTConnect (Streams) из локальных датасетов (CSV) и отдаёт XML по HTTP. Подходит для отладки интеграций, наполнения витрин данных и тестирования парсеров MTConnect.
+Cервис, который эмулирует поток данных **агента MTConnect** из локальных датасетов и отдаёт XML по HTTP. Преднозначен для наполнения витрин данных MTConnect.
 
-Основные возможности
+### Справка:
+MT Connect, открытый и бесплатный протокол, увеличивает совместимость между оборудованием с программными приложениями разных производителей. MTConnect является протоколом только для чтения, то есть он только считывает данные с контролируемых устройств, что делает его подходящим для автоматического сбора данных с парка оборудования.
 
-Генерация MTConnect Streams XML (v1.8) с шапкой Header и пустым/настраиваемым DeviceStream.
+К ключевым элементам, из которых состоит приложение MTConnect, относятся адаптер MTConnect, агент MTConnect и клиент MTConnect. Адаптер MTConnect (может быть как аппаратным, так и программным) преобразовывает все данные, поступающие с устройства, в формат, который распознает агент MTConnect (обычно SHDR). **Затем агент MTConnect сопоставляет эти данные с языком XML и позволяет клиенту MTConnect запрашивать данные по протоколу HTTP**.
 
-Маппинг колонок датасета к типам MTConnect (Samples / Events / Conditions) через правила.
+## Основные возможности:
 
-Конфиг профилями Spring (local, dev, prod).
+- Генерация MTConnect Streams XML v1.8 с шапкой Header и пустым/настраиваемым DeviceStream.
 
-Простое REST-API: GET /mtconnect/current → application/xml.
+- Маппинг колонок датасета к типам MTConnect (Samples / Events / Conditions) через правила.
 
-Требования
+- Маппинг колонок датасета к типам MTConnect (Samples / Events / Conditions) через эвристический анализ.
+
+- REST-API: GET /mtconnect/current → application/xml. 
+
+## Требования:
 
 JDK: 17 или 21 (LTS)
 
-Gradle Wrapper (в репозитории): ./gradlew
+Gradle Wrapper: ./gradlew
 
 OS: Windows / macOS / Linux
 
-(Опционально) Docker 24+
+## Структура проекта в общих чертах:
 
-Структура проекта (в общих чертах)
-MTConnect/
-├─ src/
-│  ├─ main/java/com/example/MTConnect/
-│  │  ├─ MtConnectApplication.java
-│  │  ├─ controller/MTConnectController.java     # /mtconnect/current
-│  │  ├─ service/MTConnectService.java           # сбор XML
-│  │  ├─ data/CSVDataReader.java                 # чтение CSV
-│  │  ├─ mapping/RowMapper.java                  # привязка колонок к MTConnect типам
-│  │  └─ config/                                 # Beans, MappingProperties и пр.
-│  └─ main/resources/
-│     ├─ application.yml
-│     └─ (при необходимости XSD/XML шаблоны)
-├─ datasets/                                     # локальные CSV-датасеты (не коммитим, см. .gitignore)
-├─ build.gradle.kts|build.gradle
-├─ settings.gradle
-└─ README.md
 
-Быстрый старт (локально)
 
-Клонируем и собираем:
+    MTConnect/
+    ├─ src/
+    │  ├─ main/java/com/example/MTConnect/
+    │  │  ├─ MtConnectApplication.java
+    │  │  ├─ controller/MTConnectController.java     # /mtconnect/current
+    │  │  ├─ service/MTConnectService.java           # сбор XML
+    │  │  ├─ data/CSVDataReader.java                 # чтение CSV
+    │  │  ├─ mapping/RowMapper.java                  # привязка колонок к MTConnect типам
+    │  │  └─ config/                                 # Beans, MappingProperties и пр.
+    │  └─ main/resources/
+    │     ├─ application.yml
+    │     └─ data.csv # Датасет для примера работы приложения
+    ├─ build.gradle
+    ├─ settings.gradle
+    └─ README.md
 
-git clone <repo-url>
+## **Быстрый старт локально**
+
+### Клонируем и собираем в терминал:
+
+git clone https://github.com/rwyh123/MTConnect
+
 cd MTConnect
+
 ./gradlew clean build
 
 
-Запускаем (любой вариант):
+### Запускаем:
 
-# Вариант A: через BootRun (удобно для разработки)
+**Вариант A: через BootRun**
+
 ./gradlew bootRun --args='--spring.profiles.active=local'
 
-# Вариант B: через fat-jar (рантайм)
+**Вариант B: через fat-jar** 
+
 java -jar build/libs/*-SNAPSHOT.jar --spring.profiles.active=local
 
 
-Проверяем эндпоинт:
+### Проверяем эндпоинт:
 
 curl -H "Accept: application/xml" http://localhost:8080/mtconnect/current
 
 
-Ожидаемый ответ — MTConnect XML (Streams), например:
+### Ожидаемый ответ — MTConnect XML, пример:
 
-<MTConnectStreams xmlns="urn:mtconnect.org:MTConnectStreams:1.8">
-  <Header creationTime="..." sender="CNC_Mill_Emu" instanceId="1" version="1.8" .../>
-  <Streams>
-    <DeviceStream name="CNC_Mill_Emu" uuid="EMU-001"/>
-  </Streams>
-</MTConnectStreams>
+    <MTConnectStreams xmlns="urn:mtconnect.org:MTConnectStreams:1.8">
+        <Header creationTime="..." sender="CNC_Mill_Emu" instanceId="1" version="1.8" .../>
+        <Streams>
+            <DeviceStream name="CNC_Mill_Emu" uuid="EMU-001"/>
+        </Streams>
+    </MTConnectStreams>
 
-Конфигурация
+## **Конфигурация:**
 
-Базовый application.yml хранит только безопасные дефолты. Локальные секреты/пути — в application-local.yml (в .gitignore).
+### Настройка приложения
+### **src/main/resources/application.yml:**
 
-Пример src/main/resources/application.yml:
+    === Источник данных CSV ===
+    sim:
+        # Имя CSV-файла в ресурсах (src/main/resources)
+        csvName: data.csv
 
-server:
-  port: 8080
+        === Поведение при достижении конца файла: начать сначала (true) или вернуть null (false) ===
+        loopAtEof: true
 
-spring:
-  application:
-    name: MTConnect
+        === Настройки маппинга столбцов CSV → MTConnect ===
+        mapping:
+            # Режим работы реестра маппинга:
+            # - EXPLICIT_ONLY   — использовать ТОЛЬКО правила из файла rulesFile
+            # - HEURISTIC_ONLY  — игнорировать файл и использовать авто-эвристику
+            mode: EXPLICIT_ONLY
 
-sim:
-  device:
-    name: CNC_Mill_Emu
-    uuid: EMU-001
-  mapping:
-    # режим маппинга: EXPLICIT_ONLY | SMART | FALLBACK
-    mode: EXPLICIT_ONLY
-    # путь к rules-файлу (classpath:... или file:...)
-    rulesFile: file:./datasets/mapping-rules.yaml
+            # Внешний YAML с правилами (мы подготовили mapping-rules.yaml)
+            # Можно: classpath:..., file:/abs/path/..., или просто /abs/path/...
+            rulesFile: classpath:mapping-rules.yaml
 
-csv:
-  # пример: откуда читать данные
-  path: ./datasets/current.csv
-  delimiter: ","
-  header: true
+    === Порт приложения ===
+    server:
+        port: 8080
 
+### Файл с правилами для обработки csv
+### **mapping-rules.yaml** пример:
+    rules:
+    - column: spindle_speed
+        category: Samples
+        type: RotaryVelocity
+        dataItemId: spindle_rpm
+        nativeUnits: REVOLUTION/MINUTE
 
-Пример application-local.yml (не коммитим):
+    - column: mode
+        category: Events
+        type: ControllerMode
+        dataItemId: ctrl_mode
 
-sim:
-  mapping:
-    rulesFile: file:./datasets/mapping-rules.local.yaml
+    - column: alarm_code
+        category: Conditions
+        type: Alarm
+        dataItemId: cnc_alarm
+        subType: FAILURE
 
-csv:
-  path: ./datasets/dev/current-small.csv
+    
+## Дорожная карта:
 
-Mapping Rules (пример)
-rules:
-  - column: spindle_speed
-    category: Samples
-    type: RotaryVelocity
-    dataItemId: spindle_rpm
-    nativeUnits: REVOLUTION/MINUTE
+ Разработки умной системы обработки csv
 
-  - column: mode
-    category: Events
-    type: ControllerMode
-    dataItemId: ctrl_mode
+## Контакты
 
-  - column: alarm_code
-    category: Conditions
-    type: Alarm
-    dataItemId: cnc_alarm
-    subType: FAILURE
-
-
-Мы ранее фиксировали, что колонки датасета маппятся на типы MTConnect Samples/Events/Conditions — эти правила как раз для этого.
-
-Профили и запуск
-
-local — разработка, локальные CSV и правила, подробные логи.
-
-dev / prod — для стенда/продакшна; настраивайте rulesFile и csv.path через переменные окружения.
-
-Запуск с профилем:
-
-./gradlew bootRun --args='--spring.profiles.active=local'
-# или
-java -jar build/libs/*-SNAPSHOT.jar --spring.profiles.active=dev
-
-Докер (опционально)
-
-Dockerfile (multi-stage) можно добавить, чтобы собирать образ:
-
-# сборка
-./gradlew bootJar
-docker build -t mtconnect-sim:latest .
-
-# запуск (пробрасываем датасеты внутрь контейнера)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/datasets:/app/datasets" \
-  -e "SPRING_PROFILES_ACTIVE=local" \
-  mtconnect-sim:latest
-
-
-Проверка:
-
-curl http://localhost:8080/mtconnect/current
-
-Эндпоинты
-Метод	Путь	Описание
-GET	/mtconnect/current	Текущий MTConnect Streams XML
-GET	/actuator/health	(если включен) статус приложения
-Разработка
-
-Форматирование/линт: ./gradlew spotlessApply
-
-Тесты: ./gradlew test
-
-Полная сборка: ./gradlew clean build
-
-Запуск: ./gradlew bootRun
-
-Рекомендуемые плагины качества: Spotless, Checkstyle/PMD, SpotBugs, OWASP Dependency-Check.
-
-Отладка и типичные проблемы
-
-Сообщение:
-Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar
-Что делать: убедиться, что commons-logging.jar не тянется транзитивно; при необходимости исключить зависимость в build.gradle.
-
-JAXB IllegalAnnotationExceptions при сборке XML:
-проверьте аннотации @XmlAccessorType, @XmlAttribute, @XmlValue и соответствие типов. Часто помогает выверить DTO/модели под JAXB и убрать конфликтующие Lombok-генерации (@Data иногда мешает equals/hashCode/toString).
-
-Путь к датасету/правилам:
-если используете относительные пути, запускайте из корня проекта или переходите на абсолютные/file:/classpath: URL.
-
-Дорожная карта
-
- Расширить DeviceStream фактическими ComponentStream/Samples/Events/Conditions.
-
- Добавить swagger (springdoc) для служебных REST-эндпоинтов.
-
- Генерация XML по расписанию / подписка на SSE.
-
-Лицензия
-
-Укажите лицензию проекта (например, MIT или Apache-2.0) в файле LICENSE.
-
-Контакты
-
-Вопросы и предложения — создавайте Issue или пишите в обсуждения репозитория.
+https://t.me/Yakov_Legioncommander 
