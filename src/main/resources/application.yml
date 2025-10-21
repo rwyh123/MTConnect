@@ -11,17 +11,17 @@ sim:
     # Режим работы реестра маппинга:
     # - EXPLICIT_ONLY   — использовать ТОЛЬКО правила из файла rulesFile
     # - HEURISTIC_ONLY  — игнорировать файл и использовать авто-эвристику
-    mode: HEURISTIC_ONLY
+    mode: EXPLICIT_ONLY
 
     # Внешний YAML с правилами (мы подготовили mapping-rules.yaml)
     # Можно: classpath:..., file:/abs/path/..., или просто /abs/path/...
     rulesFile: classpath:mapping-rules.yaml
 
-# === Опционально: порт приложения ===
+# === Порт приложения ===
 server:
   port: 8080
 
-# === Опционально: поведение Spring Boot ===
+# === Поведение Spring Boot ===
 spring:
   main:
     banner-mode: "off"
